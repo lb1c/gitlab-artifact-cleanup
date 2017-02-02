@@ -5,6 +5,10 @@ Currently (as of GitLab 8.12) there are no admin tools for cleaning up
 build artifacts (see issue [#18351]). This script erases build artifacts
 using the GitLab API.
 
+*Note: This tool actually erases the entire* **build** *which includes the build
+output log as well as the artifacts. See #3 for more information.*
+
+
 ## Requirements
 - [`python-gitlab`] - Python GitLab API client *(At least version 0.16)*
 - [`python-dateutil`] - A robust ISO-8601 timestamp parser, among other things
