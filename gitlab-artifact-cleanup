@@ -121,26 +121,15 @@ def parse_timedelta(s):
 
 def check_old_gitlab():
     """Detect an old version of python-gitlab"""
-    from gitlab import ProjectBuild
-    try:
-        ProjectBuild.erase
-    except AttributeError:
-        print("\nYou have an old version of python-gitlab that is missing the ability to erase builds.")
-        print("See https://github.com/gpocentek/python-gitlab/pull/159.")
-        print("Monkey-patching a solution into python-gitlab...\n")
+    import gitlab
+    from distutils.version import LooseVersion
 
-        # Monkey-patch the functionality into python-gitlab
-
-        class GitlabBuildEraseError(GitlabRetryError):
-            pass
-
-        def erase(self, **kwargs):
-            """Erase the build (remove build artifacts and trace)."""
-            url = '/projects/%s/builds/%s/erase' % (self.project_id, self.id)
-            r = self.gitlab._raw_post(url)
-            raise_error_from_response(r, GitlabBuildEraseError, 201)
-
-        ProjectBuild.erase = erase
+    glver = LooseVersion(gitlab.__version__)
+    reqver = LooseVersion('1.3.0')
+    if glver < reqver:
+        print("python-gitlab version 1.3.0 or newer is required")
+        print("You're running version {}".format(glver))
+        sys.exit(1)
 
 
 def parse_args():
