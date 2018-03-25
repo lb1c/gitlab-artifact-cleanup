@@ -183,7 +183,7 @@ def main():
             )
 
     if args.all_projects:
-        for proj in gl.projects.all(all=True):
+        for proj in gl.projects.list(as_list=False):
             cleanup.cleanup_project(proj)
     else:
         for pname in args.projects:
