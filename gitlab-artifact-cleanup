@@ -42,22 +42,22 @@ class GitlabArtifactCleanup(object):
         subtotal_count = 0
         now = utcnow()
 
-        for build in proj.builds.list(safe_all=True):
+        for job in proj.jobs.list(as_list=False):
             try:
-                af = build.artifacts_file
+                af = job.artifacts_file
             except AttributeError:
-                # Skip builds without artifacts
+                # Skip jobs without artifacts
                 continue
 
-            print('  Build {} ({}): '.format(build.id, format_datasize(af['size'])), end='')
+            print('  Job {} ({}): '.format(job.id, format_datasize(af['size'])), end='')
 
-            # Skip builds run for tagged commits
-            if build.tag:
-                print('Skipping, tagged "{}"'.format(build.ref))
+            # Skip jobs run for tagged commits
+            if job.tag:
+                print('Skipping, tagged "{}"'.format(job.ref))
                 continue
 
-            # Skip builds that are too recent
-            ts = parse_datetime(build.created_at)
+            # Skip jobs that are too recent
+            ts = parse_datetime(job.created_at)
             age = now - ts
             if age < self.min_age:
                 print('Skipping, too recent')
@@ -69,7 +69,7 @@ class GitlabArtifactCleanup(object):
                 ))
 
             if not self.dry_run:
-                build.erase()
+                job.erase()
 
             subtotal_size += af['size']
             self.total_size += af['size']
@@ -121,26 +121,15 @@ def parse_timedelta(s):
 
 def check_old_gitlab():
     """Detect an old version of python-gitlab"""
-    from gitlab import ProjectBuild
-    try:
-        ProjectBuild.erase
-    except AttributeError:
-        print("\nYou have an old version of python-gitlab that is missing the ability to erase builds.")
-        print("See https://github.com/gpocentek/python-gitlab/pull/159.")
-        print("Monkey-patching a solution into python-gitlab...\n")
+    import gitlab
+    from distutils.version import LooseVersion
 
-        # Monkey-patch the functionality into python-gitlab
-
-        class GitlabBuildEraseError(GitlabRetryError):
-            pass
-
-        def erase(self, **kwargs):
-            """Erase the build (remove build artifacts and trace)."""
-            url = '/projects/%s/builds/%s/erase' % (self.project_id, self.id)
-            r = self.gitlab._raw_post(url)
-            raise_error_from_response(r, GitlabBuildEraseError, 201)
-
-        ProjectBuild.erase = erase
+    glver = LooseVersion(gitlab.__version__)
+    reqver = LooseVersion('1.3.0')
+    if glver < reqver:
+        print("python-gitlab version 1.3.0 or newer is required")
+        print("You're running version {}".format(glver))
+        sys.exit(1)
 
 
 def parse_args():
@@ -194,7 +183,7 @@ def main():
             )
 
     if args.all_projects:
-        for proj in gl.projects.all(all=True):
+        for proj in gl.projects.list(as_list=False):
             cleanup.cleanup_project(proj)
     else:
         for pname in args.projects:
