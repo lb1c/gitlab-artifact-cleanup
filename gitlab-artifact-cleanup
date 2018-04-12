@@ -43,6 +43,8 @@ class GitlabArtifactCleanup(object):
         subtotal_count = 0
         now = utcnow()
 
+        job_list = []
+
         for job in proj.jobs.list(as_list=True):
             try:
                 af = job.artifacts_file
@@ -64,8 +66,10 @@ class GitlabArtifactCleanup(object):
                 print('Skipping, too recent')
                 continue
 
-        if (self.keep > 0):
-            build_list = build_list[self.keep:]
+        if self.keep > 0:
+            job_list = job_list[self.keep:]
+
+        for job in job_list:
 
             print('{action} {filename}'.format(
                 action = 'Would delete' if self.dry_run else 'Deleting',
