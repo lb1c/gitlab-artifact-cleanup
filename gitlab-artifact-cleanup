@@ -5,7 +5,7 @@ import argparse
 from datetime import datetime, timedelta
 from dateutil.parser import parse as parse_datetime
 from gitlab import Gitlab
-from gitlab.exceptions import *
+from gitlab.exceptions import GitlabGetError
 import gitlab.config
 
 __version__ = '1.0.1'
@@ -66,8 +66,8 @@ class GitlabArtifactCleanup(object):
                 continue
 
             print('{action} {filename}'.format(
-                action = 'Would delete' if self.dry_run else 'Deleting',
-                filename = af['filename'],
+                action='Would delete' if self.dry_run else 'Deleting',
+                filename=af['filename'],
                 ))
 
             if not self.dry_run:
@@ -80,9 +80,9 @@ class GitlabArtifactCleanup(object):
 
         if subtotal_count > 0:
             print('  {action} {size} in {count} artifacts'.format(
-                action = 'Would delete' if self.dry_run else 'Deleted',
-                size = format_datasize(subtotal_size),
-                count = subtotal_count))
+                action='Would delete' if self.dry_run else 'Deleted',
+                size=format_datasize(subtotal_size),
+                count=subtotal_count))
 
 
 def format_datasize(b):
@@ -182,8 +182,8 @@ def main():
     print('\n')
 
     cleanup = GitlabArtifactCleanup(
-            dry_run = args.dry_run,
-            min_age = args.min_age,
+            dry_run=args.dry_run,
+            min_age=args.min_age,
             )
 
     if args.all_projects:
@@ -199,9 +199,9 @@ def main():
             cleanup.cleanup_project(proj)
 
     print('\n{action} {size} in {count} artifacts total'.format(
-        action = 'Would delete' if args.dry_run else 'Deleted',
-        size = format_datasize(cleanup.total_size),
-        count = cleanup.total_count))
+        action='Would delete' if args.dry_run else 'Deleted',
+        size=format_datasize(cleanup.total_size),
+        count=cleanup.total_count))
 
 
 if __name__ == '__main__':
