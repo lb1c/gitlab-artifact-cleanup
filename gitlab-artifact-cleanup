@@ -13,8 +13,10 @@ __version__ = '1.0.1'
 try:
     # python3 only
     from datetime import timezone
+
     def utcnow():
-       return datetime.now(timezone.utc)    
+        return datetime.now(timezone.utc)
+
 except ImportError:
     # python2 fallback.
     try:
@@ -22,9 +24,10 @@ except ImportError:
     except ImportError:
         print("gitlab-artifact-cleanup requires either Python 3 or the pytz package")
         sys.exit(2)
+
     def utcnow():
-       return datetime.utcnow().replace(tzinfo=pytz.utc)
-    
+        return datetime.utcnow().replace(tzinfo=pytz.utc)
+
 
 class GitlabArtifactCleanup(object):
     def __init__(self, dry_run=False, min_age=None):
@@ -33,7 +36,6 @@ class GitlabArtifactCleanup(object):
 
         self.total_size = 0
         self.total_count = 0
-
 
     def cleanup_project(self, proj):
         print(proj.name_with_namespace)
@@ -76,7 +78,6 @@ class GitlabArtifactCleanup(object):
             subtotal_count += 1
             self.total_count += 1
 
-
         if subtotal_count > 0:
             print('  {action} {size} in {count} artifacts'.format(
                 action = 'Would delete' if self.dry_run else 'Deleted',
@@ -91,6 +92,7 @@ def format_datasize(b):
         if (b < 1024) or (pref == prefixes[-1]):
             return '{:.02f} {}B'.format(b, pref) if pref else '{} B'.format(b)
         b /= 1024.0
+
 
 def parse_timedelta(s):
     parts = s.split()
@@ -119,6 +121,7 @@ def parse_timedelta(s):
 
     raise ValueError
 
+
 def check_old_gitlab():
     """Detect an old version of python-gitlab"""
     import gitlab
@@ -135,31 +138,32 @@ def check_old_gitlab():
 def parse_args():
     ap = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument('-g', '--gitlab',
-            help='GitLab server defined in config file .python-gitlab')
+                    help='GitLab server defined in config file .python-gitlab')
     ap.add_argument('--all-projects', action='store_true',
-            help='Cleanup artifacts for all accessible projects')
+                    help='Cleanup artifacts for all accessible projects')
     ap.add_argument('-m', '--min-age', type=parse_timedelta, default=timedelta(),
-            help='Minimum age for artifacts to be deleted; Examples:\n'
-                 '  -m 60    (60 seconds)\n'
-                 '  -m "8 hours"\n'
-                 '  -m "30 days"\n'
-                 '  -m "3 weeks"\n'
-                 '  -m "6 months"\n'
-                 '  -m "2 years"\n')
+                    help='Minimum age for artifacts to be deleted; Examples:\n '
+                    '  -m 60    (60 seconds)\n'
+                    '  -m "8 hours"\n'
+                    '  -m "30 days"\n'
+                    '  -m "3 weeks"\n'
+                    '  -m "6 months"\n'
+                    '  -m "2 years"\n')
     ap.add_argument('-n', '--dry-run', action='store_true',
-            help="Don't actually delete anything")
+                    help="Don't actually delete anything")
     ap.add_argument('-p', '--project', dest='projects', action='append',
-            help='Project for which to cleanup artifacts -- can be given multiple times')
+                    help='Project for which to cleanup artifacts -- can be given multiple times')
     ap.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
 
     args = ap.parse_args()
 
     if not (args.all_projects or args.projects):
         ap.error('-p or --all-projects must be specified')
-    if (args.all_projects and args.projects):
+    if args.all_projects and args.projects:
         ap.error('-p and --all-projects are mutually exclusive')
 
     return args
+
 
 def main():
     args = parse_args()
@@ -198,6 +202,7 @@ def main():
         action = 'Would delete' if args.dry_run else 'Deleted',
         size = format_datasize(cleanup.total_size),
         count = cleanup.total_count))
+
 
 if __name__ == '__main__':
     main()
