@@ -42,7 +42,7 @@ class GitlabArtifactCleanup(object):
         subtotal_count = 0
         now = utcnow()
 
-        for job in proj.jobs.list(as_list=False):
+        for job in proj.jobs.list(as_list=True):
             try:
                 af = job.artifacts_file
             except AttributeError:
